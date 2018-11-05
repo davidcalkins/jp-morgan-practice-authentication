@@ -56,6 +56,30 @@
 			<artifactId>spring-cloud-starter-hystrix</artifactId>
 			<version>1.4.2.RELEASE</version>
 		</dependency>
+		
+		<!-- XML/JSON Binding -->
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+		</dependency>
+		
+		<!-- Testing -->
+		<dependency>
+		    <groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		    <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		
 	</dependencies>
 	
 	<!-- Maven Build Configuration -->
