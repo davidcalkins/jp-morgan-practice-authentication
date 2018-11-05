@@ -2,6 +2,7 @@ package com.jpmorgan.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.ZonedDateTime;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,8 +31,6 @@ public class AuthenticationController {
 	@PostMapping(value="/login", consumes=MediaType.APPLICATION_JSON_VALUE)
 	public UserToken login(@RequestBody UserCredentials userCredentials) 
 	{
-		
-		
 		return authService.login(userCredentials);
 	}
 	
@@ -42,10 +41,11 @@ public class AuthenticationController {
 	}
 	
 	@PostMapping(value="/validate", consumes=MediaType.APPLICATION_JSON_VALUE)
-	public boolean validate(@RequestBody UserToken userToken)
+	public Boolean validate(@RequestBody UserToken userToken)
 	{
 		return authService.isValid(userToken);
 	}
+	
 	
 	@ExceptionHandler
 	public void handleException(Exception ex, HttpServletResponse response) {

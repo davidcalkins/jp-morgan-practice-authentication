@@ -60,7 +60,17 @@ public class AuthenticationService {
 	public boolean isValid(UserToken userToken) {
 		removeExpiredSessions();
 		
-		return sessions.contains(userToken);
+		System.out.println("Sessions: " + sessions);
+		System.out.println("Is Valid?: " + userToken);
+		System.out.println("IsValid: " + sessions.contains(userToken));
+		
+		for (Iterator<UserToken> it = sessions.iterator(); it.hasNext();) {
+			UserToken tempToken = it.next();
+			if (tempToken.getUserTokenStr().equals(userToken.getUserTokenStr())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
