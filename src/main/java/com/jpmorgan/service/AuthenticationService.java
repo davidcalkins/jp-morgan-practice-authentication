@@ -1,15 +1,25 @@
 package com.jpmorgan.service;
 
+import java.security.SecureRandom;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.jpmorgan.beans.Author;
+import com.jpmorgan.beans.AuthorSession;
 import com.jpmorgan.beans.UserCredentials;
 import com.jpmorgan.beans.UserToken;
+import com.jpmorgan.repository.AuthorRepository;
+import com.jpmorgan.repository.AuthorSessionRepository;
 import com.jpmorgan.util.StringHasher;
+
+import oracle.sql.DATE;
 
 @Service
 public class AuthenticationService {
@@ -24,62 +34,56 @@ public class AuthenticationService {
 	
 	static Object lock = new Object();
 	
+	
+	SecureRandom sRand = new SecureRandom();
+	
+	
+	@Autowired
+	AuthorRepository authorRepo;
+	
+	@Autowired
+	AuthorSessionRepository sessionRepo;
+	
+	
 	/** The number of seconds until a session expires. */
 	//TODO: Not hard code this value. Should be pulled proper from .yml file
 	private static long EXPIRATION_SECONDS = 600;
 	
+	
+	private static final int BYTES_IN_RANDOM = 256/8;
+	
 	public UserToken login(UserCredentials userCredentials) {
-		removeExpiredSessions();
+//		removeExpiredSessions();
 		
-		//TODO: Test credentials
-		if (true) {
-			//TODO: Implement session saving. 
-			//TODO: Add Better Random Tokens, as well as implement expiration date. 
-			UserToken userToken = new UserToken(
-					StringHasher.sha256Hash(
-							userCredentials.getUsername() + userCredentials.getPassword()), 
-					ZonedDateTime.now().plusSeconds(EXPIRATION_SECONDS));
+		if (userCredentials == null) {
+			// TODO: Log incorrect response
+			return null;
+		}
+		
+		if (authorRepo.existsByUsernameAndPassword(
+				userCredentials.getUsername(), 
+				StringHasher.sha256Hash(userCredentials.getPassword())))
+		{
+			Author author = authorRepo.findByUsername(userCredentials.getUsername());
 			
-			synchronized(lock) {
-				sessionsByTime.add(userToken);
-				sessionsByToken.put(userToken,userToken);
-			}
-			
-			return userToken;
+			//TODO: Replace with a better date class, like timezone based date
+			byte[] randBytes = new byte[BYTES_IN_RANDOM];
+			sRand.nextBytes(randBytes);
+			String tokenString = StringHasher.sha256Hash(new String(randBytes));
+			sessionRepo.save(new AuthorSession(tokenString, Date.valueOf(LocalDate.now().plusDays(1)), author));
+			return new UserToken(tokenString, ZonedDateTime.now().plusDays(1));
 		}
 		
 		return null;
 	}
 	
 	public void logout(UserToken userToken) {
-		UserToken actualToken = sessionsByToken.get(userToken);
-		
-		if (actualToken!= null) {
-			synchronized(lock) {
-				sessionsByToken.remove(actualToken);
-				sessionsByTime.remove(actualToken);
-			}
-		}
+		sessionRepo.delete(new AuthorSession(userToken.getUserTokenStr(), null, null));
 	}
 	
 	public boolean isValid(UserToken userToken) {
-		removeExpiredSessions();
-		
-//		System.out.println("Sessions: " + sessions);
-//		System.out.println("Is Valid?: " + userToken);
-//		System.out.println("IsValid: " + sessions.contains(userToken));
-//		System.out.print("Actual: ");
-		
-//		for (Iterator<UserToken> it = sessions.iterator(); it.hasNext();) {
-//			UserToken tempToken = it.next();
-//			if (tempToken.getUserTokenStr().equals(userToken.getUserTokenStr())) {
-//				System.out.println(true);
-//				return true;
-//			}
-//		}
-//		System.out.println(false);
-//		return false;
-		return sessionsByToken.containsKey(userToken);
+		//TODO: Add date-time based validity control. 
+		return sessionRepo.existsByauthorSessionToken(userToken.getUserTokenStr());
 	}
 	
 	/**
@@ -110,6 +114,11 @@ public class AuthenticationService {
 		System.out.println("Called logoutAll. Should only for testing. ");
 		sessionsByTime.clear();
 		sessionsByToken.clear();
+		
+		List<AuthorSession> sessions = sessionRepo.findAll();
+		for (AuthorSession session : sessions) {
+			sessionRepo.delete(session);
+		}
 	}
 	
 	/** Sets the time until a new session expires in seconds. */
