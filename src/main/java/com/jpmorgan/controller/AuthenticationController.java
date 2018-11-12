@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
