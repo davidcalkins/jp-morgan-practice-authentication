@@ -2,7 +2,6 @@ package com.jpmorgan.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.ZonedDateTime;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,7 +56,7 @@ public class AuthenticationController {
 			/* Nothing to do if this fails */
 		} finally {
 			try {
-				response.sendError(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+				response.sendError(500);
 			} catch(IOException ioex) {/* Nothing to do here either */}
 		}
 	}
