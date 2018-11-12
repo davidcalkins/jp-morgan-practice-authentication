@@ -2,7 +2,9 @@ package com.jpmorgan.service;
 
 import java.security.SecureRandom;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -66,12 +68,15 @@ public class AuthenticationService {
 		{
 			Author author = authorRepo.findByUsername(userCredentials.getUsername());
 			
-			//TODO: Replace with a better date class, like timezone based date
+			ZonedDateTime expireTime = ZonedDateTime.now().plusSeconds(EXPIRATION_SECONDS);
+			
 			byte[] randBytes = new byte[BYTES_IN_RANDOM];
 			sRand.nextBytes(randBytes);
 			String tokenString = StringHasher.sha256Hash(new String(randBytes));
-			sessionRepo.save(new AuthorSession(tokenString, Date.valueOf(LocalDate.now().plusDays(1)), author));
-			return new UserToken(tokenString, ZonedDateTime.now().plusDays(1));
+			sessionRepo.save(new AuthorSession(tokenString, 
+					Timestamp.valueOf(expireTime.toLocalDateTime()),
+					author));
+			return new UserToken(tokenString, expireTime);
 		}
 		
 		return null;
